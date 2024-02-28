@@ -1,0 +1,49 @@
+name: 'Streamline CV: review'
+description: 'Automates boring part of job application: reviews CV and suggests changes.'
+inputs:
+  openaiKey:
+    description: 'OpenAI api key.'
+    required: true
+  githubKey:
+    description: 'Standard GitHub key.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+    - name: Checkout main
+      shell: bash
+      run: git fetch origin main:main
+    - name: Install Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.21
+    - uses: reviewdog/action-setup@v1
+      with:
+        reviewdog_version: latest
+    - name: Install formatter
+      shell: bash
+      run: go install github.com/google/yamlfmt/cmd/yamlfmt@v0.11.0
+    - name: Build tool
+      shell: bash
+      env:
+        ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT: true
+        OPENAI_API_KEY: ${{ inputs.openaiKey }}
+      run: |
+        set -euo pipefail
+        go install github.com/Streamline-CV/streamline-cv/cmd/reviewer@latest
+    - name: Retrieve suggestions
+      shell: bash
+      env:
+        ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT: true
+        OPENAI_API_KEY: ${{ inputs.openaiKey }}
+      run: |
+        set -euo pipefail
+        reviewer -c=config.yaml -o=rdf.json
+    - name: Run reviewdog
+      shell: bash
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ inputs.githubKey }}
+        ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT: true
+      run: |
+        cat rdf.json | reviewdog -f=rdjson -reporter=github-pr-review
