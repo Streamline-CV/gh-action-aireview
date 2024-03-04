@@ -31,7 +31,7 @@ runs:
         OPENAI_API_KEY: ${{ inputs.openaiKey }}
       run: |
         set -euo pipefail
-        go install github.com/Streamline-CV/streamline-cv/cmd/reviewer@latest
+        go install github.com/Streamline-CV/streamline-cv/cmd@latest
     - name: Retrieve suggestions
       shell: bash
       env:
