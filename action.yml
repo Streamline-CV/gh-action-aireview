@@ -32,6 +32,7 @@ runs:
       run: |
         set -euo pipefail
         go install github.com/Streamline-CV/streamline-cv/cmd@latest
+        mv ~/go/bin/{cmd,streamlinecv}
     - name: Retrieve suggestions
       shell: bash
       env:
@@ -39,7 +40,7 @@ runs:
         OPENAI_API_KEY: ${{ inputs.openaiKey }}
       run: |
         set -euo pipefail
-        reviewer -c=config.yaml -o=rdf.json
+        streamlinecv reviewer -c=config.yaml -o=rdf.json
     - name: Run reviewdog
       shell: bash
       env:
